@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>高层建筑地震主动减振动态推演</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Deterministic structural control sandbox</p>
+      <h1>高层建筑地震主动减振动态推演</h1>
+    </div>
+    <div class="top-status" id="clockPanel">
+      <span id="runState">暂停</span>
+      <strong id="simTime">0.00 s</strong>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel stage-panel">
+      <div class="panel-head">
+        <div>
+          <h2>楼层振动传递</h2>
+          <p>色块表示层间位移率，虚线为主动 tendon，红色标记故障或隔离装置。</p>
+        </div>
+        <div class="legend">
+          <span><i class="dot ok"></i>健康</span>
+          <span><i class="dot fault"></i>故障</span>
+          <span><i class="dot isolated"></i>隔离</span>
+        </div>
+      </div>
+      <canvas id="buildingCanvas"></canvas>
+      <div class="stage-readouts">
+        <div><span>顶层位移</span><strong id="roofDisp">0 mm</strong></div>
+        <div><span>顶层加速度</span><strong id="roofAcc">0.00 m/s²</strong></div>
+        <div><span>最大中层代价</span><strong id="midCost">0%</strong></div>
+        <div><span>基底剪力</span><strong id="baseShear">0 kN</strong></div>
+      </div>
+    </section>
+
+    <aside class="panel controls-panel">
+      <h2>控制台</h2>
+      <div class="transport">
+        <button id="playBtn" class="primary">▶ 播放</button>
+        <button id="stepBtn">单步 +0.04s</button>
+        <button id="resetBtn">重置</button>
+      </div>
+
+      <label class="field">
+        <span>控制目标</span>
+        <select id="objectiveSelect">
+          <option value="balanced">均衡：顶部 / 层间 / 能耗</option>
+          <option value="roof">压顶摆动：优先顶层位移</option>
+          <option value="drift">层间保护：抑制全部层间变形</option>
+          <option value="comfort">舒适优先：抑制顶层加速度</option>
+          <option value="passive">关闭主动力：被动基线</option>
+        </select>
+      </label>
+
+      <div class="field">
+        <span>装置隔离</span>
+        <select id="deviceFloorSelect"></select>
+        <div class="inline-actions">
+          <button id="isolateBtn">隔离所选装置</button>
+          <button id="restoreBtn">恢复所选装置</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span>供电模式</span>
+        <div class="segmented">
+          <button id="gridBtn" class="active">市电</button>
+          <button id="batteryBtn">备用电池</button>
+        </div>
+      </div>
+
+      <div class="switch-row">
+        <label><input id="forecastArm" type="checkbox" checked /> 余震预测参与调度</label>
+        <label><input id="autoPower" type="checkbox" /> 按风险自动供电</label>
+      </div>
+
+      <div class="risk-card" id="guardMessage">所有受保护操作均通过事务执行；失败将自动回滚。</div>
+
+      <h3>关键节点与回滚</h3>
+      <div class="inline-actions">
+        <button id="branchBtn">在当前节点分支</button>
+        <button id="rollbackBtn">回滚当前操作</button>
+      </div>
+      <div id="branchList" class="branch-list"></div>
+
+      <h3>复现</h3>
+      <div class="inline-actions">
+        <button id="exportBtn">导出推演</button>
+        <button id="importBtn">导入推演</button>
+        <input id="importFile" type="file" accept="application/json" hidden />
+      </div>
+      <input id="seedInput" class="seed" value="GSB-20260922" />
+    </aside>
+
+    <section class="panel sequence-panel">
+      <div class="panel-head">
+        <h2>事件编排</h2>
+        <button id="applyScenarioBtn">按顺序重建</button>
+      </div>
+      <p class="hint">拖动或使用箭头改变主震、余震、设备故障的组合顺序；重建将生成确定性时间线。</p>
+      <ol id="eventSequence" class="event-list"></ol>
+    </section>
+
+    <section class="panel power-panel">
+      <h2>电力与余震预测</h2>
+      <div class="meter-grid">
+        <div>
+          <div class="meter-label"><span>电力余量</span><b id="powerPct">0%</b></div>
+          <div class="meter"><i id="powerBar"></i></div>
+        </div>
+        <div>
+          <div class="meter-label"><span>电池储量</span><b id="batteryPct">0%</b></div>
+          <div class="meter battery"><i id="batteryBar"></i></div>
+        </div>
+      </div>
+      <div id="forecastList" class="forecast-list"></div>
+    </section>
+
+    <section class="panel metrics-panel">
+      <div class="panel-head">
+        <h2>策略代价对照</h2>
+        <span class="badge">当前策略 vs 同故障被动基线</span>
+      </div>
+      <div id="tradeoffCards" class="tradeoff-grid"></div>
+      <div class="chart-wrap">
+        <canvas id="metricChart"></canvas>
+      </div>
+    </section>
+
+    <section class="panel timeline-panel">
+      <div class="panel-head">
+        <h2>操作与事件日志</h2>
+        <button id="clearLogBtn">清空显示</button>
+      </div>
+      <ol id="logList" class="log-list"></ol>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
